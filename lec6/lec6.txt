@@ -1,0 +1,9 @@
+echo_server_fork.c를 수정하여
+
+Server는 3 clients와 모두 연결한 후
+접속 순서대로 3 clients로부터 문자열을 모두 수신한 후, 수신데이터 연결(concatenation)하여
+3 clients 모두에게 송신 할 것
+
+소스코드를 pdf로 출력하고 실행화면을 캡쳐하여 전체를 한개의 pdf 파일로 작성하여 upload 하세요
+
+감사합니다.

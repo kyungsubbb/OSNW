@@ -1,0 +1,4 @@
+•echo_client.c 와 echo_server.c 의 linux version 수정
+•Server는 3 clients와 모두 연결한 후
+•접속 순서대로 3 clients로부터 문자열을 모두 수신한 후, 수신데이터 연결(concatenation)하여
+•3 clients 모두에게 송신 할 것
