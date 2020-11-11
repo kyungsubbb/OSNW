@@ -1,0 +1,13 @@
+echo_server_fork.c를 수정하여
+
+Server는 3 clients와 모두 연결한 후
+3 clients로부터 문자열을 모두 수신한 후, 수신데이터를 연결(concatenation)하여
+3 clients 모두에게 송신 할 것 (과제4 및 과제6과 동일한 기능)
+
+반드시 fork() 수행하여 child process에서 클라이언트와 read(), write()를 수행하여야 하며, 프로세스간 통신(IPC)는 pipe를 사용할 것.
+
+shared memory(공유메모리)는 아직 배운 범위의 숙제가 아니므로 사용하지 말것
+
+소스코드를 pdf로 출력하고 실행화면을 캡쳐하여 전체를 한개의 pdf 파일로 작성하여 upload 하세요
+
+김승훈교수
