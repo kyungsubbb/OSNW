@@ -19,14 +19,8 @@ union semun
 {
 	int val;
 };
-struct sem{
-	char name[MAXLINE];
-	int num0;
-};
 int main(int argc, char **argv)
 {
-
-	struct sem sem;
 
 	int listen_fd, client_fd;
 	pid_t pid, pid1;
@@ -52,16 +46,24 @@ int main(int argc, char **argv)
 
 
 
-	int *cal_num;
-	char *cal_char[MAXLINE];
-	void *shared_memory = NULL;
+	//int *cal_num;
+	//char *cal_char[MAXLINE];
+	void *shared_memory = {NULL,};
 	union semun sem_union;
-
+	int a = 1234;
+	int b = 3477;
 	struct sembuf semopen = {0, -1, SEM_UNDO};
 	struct sembuf semclose = {0, 1, SEM_UNDO};
 	memset(number, 0x00, MAXLINE);
 	memset(ret, 0x00, MAXLINE);
 	memset(mid, 0x00, MAXLINE);
+	memset(string, 0x00, MAXLINE);
+	memset(num, 0x00, MAXLINE);
+	memset(buf, 0x00, MAXLINE);
+	memset(abc, 0x00, MAXLINE);
+	memset(input, 0x00, MAXLINE);
+
+
 	if( (listen_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
 		return 1;
@@ -97,29 +99,18 @@ int main(int argc, char **argv)
 		if(pid == 0)
 		{
 			close( listen_fd );
-			memset(string, 0x00, MAXLINE);
-			memset(num, 0x00, MAXLINE);
-			memset(buf, 0x00, MAXLINE);
-			memset(abc, 0x00, MAXLINE);
-			memset(input, 0x00, MAXLINE);
-			read(client_fd, string, MAXLINE);
-			read(client_fd, num, MAXLINE);
-			strcat(input, string);
-			strcat(input, " and ");
-			strcat(input, num);
-			printf("Read Data %s(%d) : %s \n",inet_ntoa(client_addr.sin_addr),client_addr.sin_port, input);
-			num1 = atoi(num);
-
+		
 			pid1 = fork();
 			if(pid1 == 0){ //C
-				shmid = shmget((key_t)1234, MAXLINE, 0666);
+
+				shmid = shmget((key_t)a, MAXLINE, 0666);
 				if (shmid == -1)
 				{
 					perror("shmget failed : ");
 					exit(0);
 				}
 
-				semid = semget((key_t)3477, 0, 0666);
+				semid = semget((key_t)b, 0, 0666);
 				if(semid == -1)
 				{
 					perror("semget failed : ");
@@ -133,31 +124,32 @@ int main(int argc, char **argv)
 					exit(0);
 				}
 				
-				
+
 				while(1)
 				{
-					
 					if(semop(semid, &semopen, 1) == -1)
 					{
 						perror("semop error : ");
 					}
+
 					sprintf( abc, "%s", (char *)shared_memory);
+					sleep(1);
 					write(client_fd, abc, strlen(abc));
 					sleep(1);
 					
 					semop(semid, &semclose, 1);
-					
 				}
 				return 1;
 			}
 			else if(pid1 > 0){ //P
-				shmid = shmget((key_t)1234, MAXLINE, 0666|IPC_CREAT);
+
+				shmid = shmget((key_t)a, MAXLINE, 0666|IPC_CREAT);
 				if (shmid == -1)
 				{
 					return 1;
 				}
 
-				semid = semget((key_t)3477, 1, IPC_CREAT|0666);
+				semid = semget((key_t)b, 1, IPC_CREAT|0666);
 				if(semid == -1)
 				{
 					return 1;
@@ -169,15 +161,19 @@ int main(int argc, char **argv)
 					return 1;
 				}
 				
-
-				//cal_num = (char *)shared_memory;
-				//*cal_num = sem.num0 ;
-				
 				sem_union.val = 1;
 				if ( -1 == semctl( semid, 0, SETVAL, sem_union))
 				{
 					return 1;
 				}
+
+				read(client_fd, string, MAXLINE);
+				read(client_fd, num, MAXLINE);
+				strcat(input, string);
+				strcat(input, " and ");
+				strcat(input, num);
+				printf("Read Data %s(%d) : %s \n",inet_ntoa(client_addr.sin_addr),client_addr.sin_port, input);
+
 				sprintf(((char *)shared_memory), "%s", input);
 				
 				while(1)
@@ -201,9 +197,6 @@ int main(int argc, char **argv)
 					num1 = atoi(arr[2]);
 					sprintf(ret, "%s", arr[0]);
 
-					printf("%d\n", num1);
-					printf("%s\n", ret);
-
 					char tmp;
 					
 					for(int i=0; i<strlen(ret); i++){
@@ -221,7 +214,7 @@ int main(int argc, char **argv)
 					strcat(buf, " and ");
 					strcat(buf, number);
 					sprintf(((char *)shared_memory), "%s", buf);
-					sleep(2);
+					sleep(1);
 					semop(semid, &semclose, 1);
 				}
 				return 1;
@@ -230,8 +223,12 @@ int main(int argc, char **argv)
 			close(client_fd);
 			return 0;
 		}
-		else if( pid > 0)
+		else if( pid > 0){
+			a++;
+			b++;
 			close(client_fd);
+		}
+			
 	}
 	return 0;
 }
