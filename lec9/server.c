@@ -9,13 +9,27 @@
 #include <signal.h>
 #include <stdlib.h>
 
-#define MAXLINE 1024
-#define PORTNUM 3600
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/sem.h>
 
+#define MAXLINE 1024
+#define PORTNUM 3500
+union semun
+{
+	int val;
+};
+struct sem{
+	char name[MAXLINE];
+	int num0;
+};
 int main(int argc, char **argv)
 {
+
+	struct sem sem;
+
 	int listen_fd, client_fd;
-	pid_t pid;
+	pid_t pid, pid1;
 	socklen_t addrlen;
 	int readn;
 	char string[MAXLINE];
@@ -23,9 +37,30 @@ int main(int argc, char **argv)
 	int num1;
 	char mid[MAXLINE];
 	char buf[MAXLINE];
-	
+	char input[MAXLINE];
+	char ret[MAXLINE];
+	char number[MAXLINE];
+	char abc[MAXLINE];
 	struct sockaddr_in client_addr, server_addr;
+
+	char *arr[10] = { NULL, };
 	
+	//semaphore
+
+	int shmid;
+	int semid;
+
+
+
+	int *cal_num;
+	char *cal_char[MAXLINE];
+	void *shared_memory = NULL;
+	union semun sem_union;
+
+	struct sembuf semopen = {0, -1, SEM_UNDO};
+	struct sembuf semclose = {0, 1, SEM_UNDO};
+	memset(number, 0x00, MAXLINE);
+	memset(ret, 0x00, MAXLINE);
 	memset(mid, 0x00, MAXLINE);
 	if( (listen_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
@@ -65,43 +100,133 @@ int main(int argc, char **argv)
 			memset(string, 0x00, MAXLINE);
 			memset(num, 0x00, MAXLINE);
 			memset(buf, 0x00, MAXLINE);
+			memset(abc, 0x00, MAXLINE);
+			memset(input, 0x00, MAXLINE);
 			read(client_fd, string, MAXLINE);
 			read(client_fd, num, MAXLINE);
-			printf("Read Data %s(%d) : %s and %s\n",inet_ntoa(client_addr.sin_addr),client_addr.sin_port, string, num);
+			strcat(input, string);
+			strcat(input, " and ");
+			strcat(input, num);
+			printf("Read Data %s(%d) : %s \n",inet_ntoa(client_addr.sin_addr),client_addr.sin_port, input);
 			num1 = atoi(num);
-			for(int j=0; j<strlen(string); j++){
-					buf[j] = string[j];
-				}
-			while(1){
-				//int i = 0;
-				char tmp;
-				//memset(buf, 0x00, MAXLINE);
-				
 
-				for(int i=0; i<strlen(string); i++){
-					if(i==0) tmp = buf[0];
-					if(buf[i+1] != 0){
-						buf[i] = buf[i+1];
-					}
-					else{
-						buf[i]= tmp;
-					}
+			pid1 = fork();
+			if(pid1 == 0){ //C
+				shmid = shmget((key_t)1234, MAXLINE, 0666);
+				if (shmid == -1)
+				{
+					perror("shmget failed : ");
+					exit(0);
 				}
 
+				semid = semget((key_t)3477, 0, 0666);
+				if(semid == -1)
+				{
+					perror("semget failed : ");
+					return 1;
+				}
+
+				shared_memory = shmat(shmid, NULL, 0);
+				if (shared_memory == (void *)-1)
+				{
+					perror("shmat failed : ");
+					exit(0);
+				}
 				
 				
-				num1 ++;
-				sprintf(num, "%d", num1);
-
-				strcat(mid, buf);
-				strcat(mid, " and ");
-				strcat(mid, num);
-
-				write(client_fd, mid, strlen(mid));
-				sleep(1);
-				memset(mid, 0x00, MAXLINE);
+				while(1)
+				{
+					
+					if(semop(semid, &semopen, 1) == -1)
+					{
+						perror("semop error : ");
+					}
+					sprintf( abc, "%s", (char *)shared_memory);
+					write(client_fd, abc, strlen(abc));
+					sleep(1);
+					
+					semop(semid, &semclose, 1);
+					
+				}
+				return 1;
 			}
-			
+			else if(pid1 > 0){ //P
+				shmid = shmget((key_t)1234, MAXLINE, 0666|IPC_CREAT);
+				if (shmid == -1)
+				{
+					return 1;
+				}
+
+				semid = semget((key_t)3477, 1, IPC_CREAT|0666);
+				if(semid == -1)
+				{
+					return 1;
+				}
+
+				shared_memory = shmat(shmid, NULL, 0);
+				if (shared_memory == (void *)-1)
+				{
+					return 1;
+				}
+				
+
+				//cal_num = (char *)shared_memory;
+				//*cal_num = sem.num0 ;
+				
+				sem_union.val = 1;
+				if ( -1 == semctl( semid, 0, SETVAL, sem_union))
+				{
+					return 1;
+				}
+				sprintf(((char *)shared_memory), "%s", input);
+				
+				while(1)
+				{
+					int j = 0;
+					if(semop(semid, &semopen, 1) == -1)
+					{
+						return 1;
+					}
+
+					sprintf(buf, "%s", (char *)shared_memory);
+
+					char *ptr = strtok(buf, " ");
+					while(ptr != NULL){
+						arr[j] = ptr;
+						j++;
+
+						ptr = strtok(NULL, " ");
+					}
+					
+					num1 = atoi(arr[2]);
+					sprintf(ret, "%s", arr[0]);
+
+					printf("%d\n", num1);
+					printf("%s\n", ret);
+
+					char tmp;
+					
+					for(int i=0; i<strlen(ret); i++){
+						if(i==0) tmp = ret[0];
+						if(ret[i+1] != 0){
+							ret[i] = ret[i+1];
+						}
+						else{
+							ret[i]= tmp;
+						}
+					}
+					sprintf(number, "%d", ++num1);
+					memset(buf, 0x00, MAXLINE);
+					strcat(buf, ret);
+					strcat(buf, " and ");
+					strcat(buf, number);
+					sprintf(((char *)shared_memory), "%s", buf);
+					sleep(2);
+					semop(semid, &semclose, 1);
+				}
+				return 1;
+			}
+
 			close(client_fd);
 			return 0;
 		}
