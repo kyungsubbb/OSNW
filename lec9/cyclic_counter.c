@@ -29,7 +29,6 @@ int main(int argc, char **argv)
 	char string[MAXLINE];
 	char num[MAXLINE];
 	int num1;
-	char mid[MAXLINE];
 	char buf[MAXLINE];
 	char input[MAXLINE];
 	char ret[MAXLINE];
@@ -45,18 +44,15 @@ int main(int argc, char **argv)
 	int semid;
 
 
-
-	//int *cal_num;
-	//char *cal_char[MAXLINE];
 	void *shared_memory = {NULL,};
 	union semun sem_union;
 	int a = 1234;
 	int b = 3477;
 	struct sembuf semopen = {0, -1, SEM_UNDO};
 	struct sembuf semclose = {0, 1, SEM_UNDO};
+
 	memset(number, 0x00, MAXLINE);
 	memset(ret, 0x00, MAXLINE);
-	memset(mid, 0x00, MAXLINE);
 	memset(string, 0x00, MAXLINE);
 	memset(num, 0x00, MAXLINE);
 	memset(buf, 0x00, MAXLINE);
@@ -123,8 +119,6 @@ int main(int argc, char **argv)
 					perror("shmat failed : ");
 					exit(0);
 				}
-				
-
 				while(1)
 				{
 					if(semop(semid, &semopen, 1) == -1)
@@ -219,7 +213,6 @@ int main(int argc, char **argv)
 				}
 				return 1;
 			}
-
 			close(client_fd);
 			return 0;
 		}
@@ -232,3 +225,4 @@ int main(int argc, char **argv)
 	}
 	return 0;
 }
+
