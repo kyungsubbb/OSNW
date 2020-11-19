@@ -18,7 +18,7 @@ int main(int argc, char **argv)
     char num[MAXLINE];
 
     printf("intput String :");
-    scanf("%s", string);
+    scanf("%[^\n]s", string);
     printf("intput Number :");
     scanf("%s", num);
 
@@ -64,7 +64,15 @@ int main(int argc, char **argv)
             perror("read error : ");
             return 1;
         }
-        printf("read : %s\n", buf);
+
+        memset(string, 0x00, MAXLINE);
+        memset(num, 0x00, MAXLINE);
+        char *tmp1 = strtok(buf, ",");
+        char *tmp2 = strtok(NULL, ",");
+
+
+
+        printf("read : %s and %s\n", tmp1, tmp2);
     }
     
     close(server_sockfd);
