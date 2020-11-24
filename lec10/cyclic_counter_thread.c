@@ -46,7 +46,7 @@ void *con(void *data)
 	//char ret[MAXLINE];
 	//memset(ret, 0x00, MAXLINE);
 	//sprintf(ret, "%s", data);
-	int *count = (int *)data;
+	//int *count = (int *)data;
 	char abc[MAXLINE];
 	memset(abc, 0x00, MAXLINE);
 
@@ -56,9 +56,9 @@ void *con(void *data)
 	while(1)
 	{
 		pthread_mutex_lock(&m_lock);
-		sprintf(abc, "%s", count);
-		write(client_fd, abc, strlen(abc));
-		//printf("%s", ret);
+		sprintf(abc, "%ls", (int *)data);
+		//write(client_fd, abc, strlen(abc));
+		printf("%s", abc);
 		sleep(1);
 		//*count = tmp;
 		//printf("%lu %d\n", thread_id, *count);
@@ -140,7 +140,6 @@ int main(int argc, char **argv)
 		}
 		read(client_fd, string, MAXLINE);
 		read(client_fd, num, MAXLINE);
-		//count = atoi(num);
 		pthread_create(&thread_id[0], NULL, pro, (void *)&num);
 		usleep(5000);
 		pthread_create(&thread_id[1], NULL, con, (void *)&num);
