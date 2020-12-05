@@ -62,16 +62,21 @@ int main(int argc, char **argv)
    {
       alls = reads;
       fd_num = select(maxfd + 1 , &alls, (fd_set *)0, (fd_set *)0, NULL);
+      memset(rbuf, 0x00, MAXLINE);
+      memset(buf, 0x00, MAXLINE);
       if (FD_ISSET(cnt, &alls))
       {
-         memset(buf, 0x00, MAXLINE);
+         //memset(buf, 0x00, MAXLINE);
          read(0, buf, MAXLINE);
-         if(strncmp(buf, "quit", 4) == 0) break;
          if (write(server_sockfd, buf, MAXLINE) <= 0)
-         {
-            perror("write error : ");
-            return 1;
-         }
+            {
+               perror("write error : ");
+               return 1;
+            }
+         if(strncmp(buf, "quit", 4) == 0){
+            
+            break;
+         } 
 
       }
       else if(FD_ISSET(server_sockfd, &alls))
