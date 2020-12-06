@@ -137,9 +137,8 @@ int main(int argc, char **argv)
 							sprintf(num, "%d", result);
 							strcat(sol, ", ");
 							strcat(sol, num);
-							for (int j = 4 ; j < a+4; j ++){
-								//write(client_fd[j], sol, strlen(sol));
-								write(j, sol, strlen(sol));
+							for (int j = 0 ; j < a; j ++){
+								write(client_fd[j], sol, strlen(sol));
 							}
 						}
 					}

@@ -66,7 +66,6 @@ int main(int argc, char **argv)
       memset(buf, 0x00, MAXLINE);
       if (FD_ISSET(cnt, &alls))
       {
-         //memset(buf, 0x00, MAXLINE);
          read(0, buf, MAXLINE);
          if (write(server_sockfd, buf, MAXLINE) <= 0)
             {
